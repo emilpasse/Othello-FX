@@ -38,6 +38,8 @@ public class ExampleAgentA extends Agent{
 	int nodesExamined = 0;
 	int depthOfSearch = 0;
 	PlayerTurn otherPlayerTurn;
+	BoardCellState playerCell;
+	BoardCellState otherPlayerCell;
 
 	public ExampleAgentA() {
 		this(PlayerTurn.PLAYER_ONE);
@@ -47,14 +49,22 @@ public class ExampleAgentA extends Agent{
 	public ExampleAgentA(String name) {
 		super(name, PlayerTurn.PLAYER_ONE);
 		otherPlayerTurn = PlayerTurn.PLAYER_TWO;
+		otherPlayerCell = BoardCellState.BLACK;
+		playerCell = BoardCellState.WHITE;
 	}
 	
 	private ExampleAgentA(PlayerTurn playerTurn) {
 		super(playerTurn);
-		if(playerTurn == PlayerTurn.PLAYER_ONE)
+		if(playerTurn == PlayerTurn.PLAYER_ONE){
 			otherPlayerTurn = PlayerTurn.PLAYER_TWO;
-		else
+			otherPlayerCell = BoardCellState.BLACK;
+			playerCell = BoardCellState.WHITE;
+		}
+		else{
 			otherPlayerTurn = PlayerTurn.PLAYER_ONE;
+			otherPlayerCell = BoardCellState.WHITE;
+			playerCell = BoardCellState.BLACK;
+		}	
 	}
 
 	/**
@@ -97,11 +107,23 @@ public class ExampleAgentA extends Agent{
 		int value = 0;
 		int potentialMobility = 0;
 		int mobility = 0;
+		BoardCellState cellState = BoardCellState.BLACK;
+
+		if(agentTurn){
+			List<ObjectiveWrapper> moves = AgentController.getAvailableMoves(state, playerTurn);
+			mobility = moves.size();
+			//cellState = playerCell;
+		}
+		else{
+			List<ObjectiveWrapper> moves = AgentController.getAvailableMoves(state, otherPlayerTurn);
+			mobility = moves.size();
+			//cellState = otherPlayerCell;
+		}
 
 		GameBoardCell[][] cells = state.getCells();
 		for(int i = 0; i < cells.length; i++){
 			for(int j = 0; j < cells[i].length; j++){
-				if(cells[i][j].getCellState() == BoardCellState.BLACK)
+				if(cells[i][j].getCellState() == cellState)
 				for(DirectionWrapper neighbour : cells[i][j].getNeighbors()){
 					if(neighbour.getCell().getCellState() == BoardCellState.EMPTY){
 						potentialMobility++;
@@ -109,15 +131,6 @@ public class ExampleAgentA extends Agent{
 					}
 				}
 			}
-		}
-
-		if(agentTurn){
-			List<ObjectiveWrapper> moves = AgentController.getAvailableMoves(state, playerTurn);
-			mobility = moves.size();
-		}
-		else{
-			List<ObjectiveWrapper> moves = AgentController.getAvailableMoves(state, otherPlayerTurn);
-			mobility = moves.size();
 		}
 		
 		value = mobility + potentialMobility;
