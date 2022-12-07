@@ -31,6 +31,9 @@ public class ExampleAgentA extends Agent{
 	
 	static int MAX = 1000;
 	static int MIN = -1000;
+	static int MAX_DEPTH = 3;
+	int nodesExamined = 0;
+	int depthOfSearch = 0;
 	PlayerTurn otherPlayerTurn;
 
 	public ExampleAgentA() {
@@ -56,13 +59,39 @@ public class ExampleAgentA extends Agent{
 	 */
 	@Override
 	public AgentMove getMove(GameBoardState gameState) {
-		System.out.println("Making move");
+		nodesExamined = 0;
+		depthOfSearch = 0;
+		AgentMove move = findMove(gameState);
+		System.out.println("Nodes Examined: " + nodesExamined);
+		System.out.println("Depth of Search: " + depthOfSearch);
+		return move;
+	}
+
+	private AgentMove findMove(GameBoardState gameState){
+		int bestValue = MIN;
+		int alpha = MIN;
+		int beta = MAX;
+		AgentMove bestMove = null;
 		List<ObjectiveWrapper> moves = AgentController.getAvailableMoves(gameState, playerTurn);
-		return minimax(0, 0, true, moves, MIN, MAX, gameState);
+		for(int i = 0; i < moves.size(); i++){
+			GameBoardState newState = AgentController.getNewState(gameState, moves.get(i));
+			MoveWrapper newMove = new MoveWrapper(moves.get(i));
+			int value = minimaxAlphaBetaPrune(0, false, alpha, beta, newState, newMove);
+
+			if(bestValue < value){
+				bestValue = value;
+				bestMove = newMove;
+			}
+			alpha = Math.max(alpha, bestValue);
+			if(beta <= alpha){
+				break;
+			}
+		}
+		return bestMove;
 	}
 
 	private MoveWrapper minimax(int depth, int nodeIndex, boolean agentTurn, List<ObjectiveWrapper> moves, int alpha, int beta, GameBoardState gameState) {
-		if(depth == 10){
+		if(depth == 2){
 			return new MoveWrapper(moves.get(0));
 		}
 
@@ -71,7 +100,7 @@ public class ExampleAgentA extends Agent{
 			MoveWrapper move  = new MoveWrapper(moves.get(0));
 
 			for(int i = 0; i < moves.size(); i++){
-
+				nodesExamined++;
 				GameBoardState newState = AgentController.getNewState(gameState, moves.get(i));
 				List<ObjectiveWrapper> newMoves = AgentController.getAvailableMoves(newState, otherPlayerTurn);
 
@@ -98,6 +127,7 @@ public class ExampleAgentA extends Agent{
 
 			for (int i = 0; i < moves.size(); i++)
 			{
+				nodesExamined++;
 				GameBoardState newState = AgentController.getNewState(gameState, moves.get(i));
 				List<ObjectiveWrapper> newMoves = AgentController.getAvailableMoves(newState, playerTurn);
 
@@ -116,6 +146,58 @@ public class ExampleAgentA extends Agent{
 					break;
 			}
 			return move;
+		}
+	}
+
+	private int minimaxAlphaBetaPrune(int depth, boolean agentTurn, int alpha, int beta, GameBoardState gameState, MoveWrapper move) {
+		if(gameState.isTerminal() || depth == MAX_DEPTH){
+			depthOfSearch = depth;
+			return move.getMoveReward();
+		}
+
+		if(agentTurn){
+			int best = MIN;
+			List<ObjectiveWrapper> moves = AgentController.getAvailableMoves(gameState, playerTurn);
+
+			for(int i = 0; i < moves.size(); i++){
+				nodesExamined++;
+				GameBoardState newState = AgentController.getNewState(gameState, moves.get(i));
+				MoveWrapper newMove = new MoveWrapper(moves.get(i));
+				
+				int value = minimaxAlphaBetaPrune(depth + 1, false, alpha, beta, newState, newMove);
+
+				best = Math.max(best, value);
+            	alpha = Math.max(alpha, best);
+				//System.out.println("Agent");
+				// Alpha Beta Pruning
+				if (beta <= alpha){
+					//depthOfSearch = depth;
+					break;
+				}
+			}
+			return best;
+		}
+		else{
+			int best = MAX;
+			List<ObjectiveWrapper> moves = AgentController.getAvailableMoves(gameState, otherPlayerTurn);
+
+			for(int i = 0; i < moves.size(); i++){
+				nodesExamined++;
+				GameBoardState newState = AgentController.getNewState(gameState, moves.get(i));
+				MoveWrapper newMove = new MoveWrapper(moves.get(i));
+				
+				int value = minimaxAlphaBetaPrune(depth + 1, true, alpha, beta, newState, newMove);
+
+				best = Math.min(best, value);
+            	alpha = Math.min(alpha, best);
+				//System.out.println("Not Agent");
+				// Alpha Beta Pruning
+				if (beta <= alpha){
+					//depthOfSearch = depth;
+					break;
+				}
+			}
+			return best;
 		}
 	}
 	
