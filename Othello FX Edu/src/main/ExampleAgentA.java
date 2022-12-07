@@ -7,11 +7,14 @@ import java.util.List;
 import java.util.Random;
 
 import com.eudycontreras.othello.capsules.AgentMove;
+import com.eudycontreras.othello.capsules.DirectionWrapper;
 import com.eudycontreras.othello.capsules.ObjectiveWrapper;
 import com.eudycontreras.othello.capsules.MoveWrapper;
 import com.eudycontreras.othello.controllers.AgentController;
 import com.eudycontreras.othello.controllers.Agent;
+import com.eudycontreras.othello.enumerations.BoardCellState;
 import com.eudycontreras.othello.enumerations.PlayerTurn;
+import com.eudycontreras.othello.models.GameBoardCell;
 import com.eudycontreras.othello.models.GameBoardState;
 import com.eudycontreras.othello.threading.ThreadManager;
 import com.eudycontreras.othello.threading.TimeSpan;
@@ -90,6 +93,38 @@ public class ExampleAgentA extends Agent{
 		return bestMove;
 	}
 
+	private int heuristic(GameBoardState state, boolean agentTurn){
+		int value = 0;
+		int potentialMobility = 0;
+		int mobility = 0;
+
+		GameBoardCell[][] cells = state.getCells();
+		for(int i = 0; i < cells.length; i++){
+			for(int j = 0; j < cells[i].length; j++){
+				if(cells[i][j].getCellState() == BoardCellState.BLACK)
+				for(DirectionWrapper neighbour : cells[i][j].getNeighbors()){
+					if(neighbour.getCell().getCellState() == BoardCellState.EMPTY){
+						potentialMobility++;
+						break;
+					}
+				}
+			}
+		}
+
+		if(agentTurn){
+			List<ObjectiveWrapper> moves = AgentController.getAvailableMoves(state, playerTurn);
+			mobility = moves.size();
+		}
+		else{
+			List<ObjectiveWrapper> moves = AgentController.getAvailableMoves(state, otherPlayerTurn);
+			mobility = moves.size();
+		}
+		
+		value = mobility + potentialMobility;
+
+		return value;
+	}
+
 	private MoveWrapper minimax(int depth, int nodeIndex, boolean agentTurn, List<ObjectiveWrapper> moves, int alpha, int beta, GameBoardState gameState) {
 		if(depth == 2){
 			return new MoveWrapper(moves.get(0));
@@ -152,7 +187,7 @@ public class ExampleAgentA extends Agent{
 	private int minimaxAlphaBetaPrune(int depth, boolean agentTurn, int alpha, int beta, GameBoardState gameState, MoveWrapper move) {
 		if(gameState.isTerminal() || depth == MAX_DEPTH){
 			depthOfSearch = depth;
-			return move.getMoveReward();
+			return heuristic(gameState, agentTurn);
 		}
 
 		if(agentTurn){
