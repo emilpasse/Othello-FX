@@ -32,8 +32,8 @@ import com.eudycontreras.othello.threading.TimeSpan;
  */
 public class ExampleAgentA extends Agent{
 	
-	static int MAX = 1000;
-	static int MIN = -1000;
+	static int MAX = 10000;
+	static int MIN = -10000;
 	static int MAX_DEPTH = 3;
 	int nodesExamined = 0;
 	int depthOfSearch = 0;
@@ -46,6 +46,10 @@ public class ExampleAgentA extends Agent{
 	public ExampleAgentA() {
 		this(PlayerTurn.PLAYER_ONE);
 		// TODO Auto-generated constructor stub
+		otherPlayerTurn = PlayerTurn.PLAYER_TWO;
+		otherPlayerCell = BoardCellState.BLACK;
+		playerCell = BoardCellState.WHITE;
+		initCellValues();
 	}
 	
 	public ExampleAgentA(String name) {
@@ -56,7 +60,7 @@ public class ExampleAgentA extends Agent{
 		initCellValues();
 	}
 	
-	private ExampleAgentA(PlayerTurn playerTurn) {
+	public ExampleAgentA(PlayerTurn playerTurn) {
 		super(playerTurn);
 		if(playerTurn == PlayerTurn.PLAYER_ONE){
 			otherPlayerTurn = PlayerTurn.PLAYER_TWO;
@@ -101,31 +105,33 @@ public class ExampleAgentA extends Agent{
 			}
 			alpha = Math.max(alpha, bestValue);
 			if(beta <= alpha){
-				break;
+				//break;
 			}
 		}
 		return bestMove;
 	}
 
-	private int heuristic(GameBoardState state, MoveWrapper move, boolean agentTurn){
+	private int heuristic(GameBoardState state, boolean agentTurn){
 		int value = 0;
 		int potentialMobility = 0;
 		int mobility = 0;
 		BoardCellState cellState, otherCellState;
-		//int cellValue = cellValues[move.getMoveIndex().getRow()][move.getMoveIndex().getCol()];
 		int cellValue = 0;
+		int score = 0;
 
 		if(agentTurn){
 			List<ObjectiveWrapper> moves = AgentController.getAvailableMoves(state, otherPlayerTurn);
 			mobility = moves.size();
 			cellState = playerCell;
 			otherCellState = otherPlayerCell;
+			score = state.getWhiteCount() - state.getBlackCount();
 		}
 		else{
 			List<ObjectiveWrapper> moves = AgentController.getAvailableMoves(state, playerTurn);
 			mobility = moves.size();
 			cellState = otherPlayerCell;
 			otherCellState = playerCell;
+			score = state.getBlackCount() - state.getWhiteCount();
 		}
 
 		GameBoardCell[][] cells = state.getCells();
@@ -153,74 +159,16 @@ public class ExampleAgentA extends Agent{
 			}
 		}
 		
-		value = cellValue - mobility + potentialMobility;
+		value = cellValue + mobility + potentialMobility + score;
 
 		return value;
-	}
-
-	private MoveWrapper minimax(int depth, int nodeIndex, boolean agentTurn, List<ObjectiveWrapper> moves, int alpha, int beta, GameBoardState gameState) {
-		if(depth == 2){
-			return new MoveWrapper(moves.get(0));
-		}
-
-		if(agentTurn){
-			int best = MIN;
-			MoveWrapper move  = new MoveWrapper(moves.get(0));
-
-			for(int i = 0; i < moves.size(); i++){
-				nodesExamined++;
-				GameBoardState newState = AgentController.getNewState(gameState, moves.get(i));
-				List<ObjectiveWrapper> newMoves = AgentController.getAvailableMoves(newState, otherPlayerTurn);
-
-				if(newMoves.size() < 1){
-					//move = new MoveWrapper(newMoves.get(0));
-					break;
-				}
-
-				move = minimax(depth + 1, 2 * nodeIndex + i, false, newMoves, alpha, beta, newState);
-				best = Math.max(best, move.getMoveReward());
-            	alpha = Math.max(alpha, best);
-				
-				System.out.println(depth + " " + i);
-
-				// Alpha Beta Pruning
-				if (beta <= alpha)
-					break;
-			}
-			return move;
-		}
-		else{
-			int best = MAX;
-			MoveWrapper move = new MoveWrapper(moves.get(0));
-
-			for (int i = 0; i < moves.size(); i++)
-			{
-				nodesExamined++;
-				GameBoardState newState = AgentController.getNewState(gameState, moves.get(i));
-				List<ObjectiveWrapper> newMoves = AgentController.getAvailableMoves(newState, playerTurn);
-
-				if(newMoves.size() < 1){
-					//move = new MoveWrapper(newMoves.get(0));
-					break;
-				}
-
-				move = minimax(depth + 1, 2 * nodeIndex + i, true, newMoves, alpha, beta, newState);
-				best = Math.min(best, move.getMoveReward());
-				beta = Math.min(beta, best);
-
-				System.out.println(depth + " " + i);
-				// Alpha Beta Pruning
-				if (beta <= alpha)
-					break;
-			}
-			return move;
-		}
 	}
 
 	private int minimaxAlphaBetaPrune(int depth, boolean agentTurn, int alpha, int beta, GameBoardState gameState, MoveWrapper move) {
 		if(gameState.isTerminal() || depth == MAX_DEPTH){
 			depthOfSearch = depth;
-			return heuristic(gameState, move, agentTurn);
+			nodesExamined++;
+			return heuristic(gameState, agentTurn);
 		}
 
 		if(agentTurn){
@@ -228,7 +176,7 @@ public class ExampleAgentA extends Agent{
 			List<ObjectiveWrapper> moves = AgentController.getAvailableMoves(gameState, playerTurn);
 
 			for(int i = 0; i < moves.size(); i++){
-				nodesExamined++;
+				//nodesExamined++;
 				GameBoardState newState = AgentController.getNewState(gameState, moves.get(i));
 				MoveWrapper newMove = new MoveWrapper(moves.get(i));
 				
@@ -240,7 +188,7 @@ public class ExampleAgentA extends Agent{
 				// Alpha Beta Pruning
 				if (beta <= alpha){
 					//depthOfSearch = depth;
-					break;
+					//break;
 				}
 			}
 			return best;
@@ -250,7 +198,7 @@ public class ExampleAgentA extends Agent{
 			List<ObjectiveWrapper> moves = AgentController.getAvailableMoves(gameState, otherPlayerTurn);
 
 			for(int i = 0; i < moves.size(); i++){
-				nodesExamined++;
+				//nodesExamined++;
 				GameBoardState newState = AgentController.getNewState(gameState, moves.get(i));
 				MoveWrapper newMove = new MoveWrapper(moves.get(i));
 				
@@ -262,7 +210,7 @@ public class ExampleAgentA extends Agent{
 				// Alpha Beta Pruning
 				if (beta <= alpha){
 					//depthOfSearch = depth;
-					break;
+					//break;
 				}
 			}
 			return best;
