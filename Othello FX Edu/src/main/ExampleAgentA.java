@@ -34,7 +34,7 @@ public class ExampleAgentA extends Agent{
 	
 	static int MAX = 10000;
 	static int MIN = -10000;
-	static int MAX_DEPTH = 3;
+	static int MAX_DEPTH = 5;
 	int nodesExamined = 0;
 	int depthOfSearch = 0;
 	PlayerTurn otherPlayerTurn;
@@ -105,7 +105,7 @@ public class ExampleAgentA extends Agent{
 			}
 			alpha = Math.max(alpha, bestValue);
 			if(beta <= alpha){
-				//break;
+				break;
 			}
 		}
 		return bestMove;
@@ -187,8 +187,7 @@ public class ExampleAgentA extends Agent{
 				//System.out.println("Agent");
 				// Alpha Beta Pruning
 				if (beta <= alpha){
-					//depthOfSearch = depth;
-					//break;
+					break;
 				}
 			}
 			return best;
@@ -205,12 +204,11 @@ public class ExampleAgentA extends Agent{
 				int value = minimaxAlphaBetaPrune(depth + 1, true, alpha, beta, newState, newMove);
 
 				best = Math.min(best, value);
-            	alpha = Math.min(alpha, best);
+            	beta = Math.min(beta, best);
 				//System.out.println("Not Agent");
 				// Alpha Beta Pruning
 				if (beta <= alpha){
-					//depthOfSearch = depth;
-					//break;
+					break;
 				}
 			}
 			return best;
