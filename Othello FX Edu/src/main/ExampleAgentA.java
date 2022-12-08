@@ -41,6 +41,8 @@ public class ExampleAgentA extends Agent{
 	BoardCellState playerCell;
 	BoardCellState otherPlayerCell;
 
+	int[][] cellValues = new int[8][8];
+
 	public ExampleAgentA() {
 		this(PlayerTurn.PLAYER_ONE);
 		// TODO Auto-generated constructor stub
@@ -51,6 +53,7 @@ public class ExampleAgentA extends Agent{
 		otherPlayerTurn = PlayerTurn.PLAYER_TWO;
 		otherPlayerCell = BoardCellState.BLACK;
 		playerCell = BoardCellState.WHITE;
+		initCellValues();
 	}
 	
 	private ExampleAgentA(PlayerTurn playerTurn) {
@@ -64,7 +67,8 @@ public class ExampleAgentA extends Agent{
 			otherPlayerTurn = PlayerTurn.PLAYER_ONE;
 			otherPlayerCell = BoardCellState.WHITE;
 			playerCell = BoardCellState.BLACK;
-		}	
+		}
+		initCellValues();	
 	}
 
 	/**
@@ -84,8 +88,8 @@ public class ExampleAgentA extends Agent{
 		int bestValue = MIN;
 		int alpha = MIN;
 		int beta = MAX;
-		AgentMove bestMove = null;
 		List<ObjectiveWrapper> moves = AgentController.getAvailableMoves(gameState, playerTurn);
+		MoveWrapper bestMove = new MoveWrapper(moves.get(0));
 		for(int i = 0; i < moves.size(); i++){
 			GameBoardState newState = AgentController.getNewState(gameState, moves.get(i));
 			MoveWrapper newMove = new MoveWrapper(moves.get(i));
@@ -103,37 +107,53 @@ public class ExampleAgentA extends Agent{
 		return bestMove;
 	}
 
-	private int heuristic(GameBoardState state, boolean agentTurn){
+	private int heuristic(GameBoardState state, MoveWrapper move, boolean agentTurn){
 		int value = 0;
 		int potentialMobility = 0;
 		int mobility = 0;
-		BoardCellState cellState = BoardCellState.BLACK;
+		BoardCellState cellState, otherCellState;
+		//int cellValue = cellValues[move.getMoveIndex().getRow()][move.getMoveIndex().getCol()];
+		int cellValue = 0;
 
 		if(agentTurn){
-			List<ObjectiveWrapper> moves = AgentController.getAvailableMoves(state, playerTurn);
-			mobility = moves.size();
-			//cellState = playerCell;
-		}
-		else{
 			List<ObjectiveWrapper> moves = AgentController.getAvailableMoves(state, otherPlayerTurn);
 			mobility = moves.size();
-			//cellState = otherPlayerCell;
+			cellState = playerCell;
+			otherCellState = otherPlayerCell;
+		}
+		else{
+			List<ObjectiveWrapper> moves = AgentController.getAvailableMoves(state, playerTurn);
+			mobility = moves.size();
+			cellState = otherPlayerCell;
+			otherCellState = playerCell;
 		}
 
 		GameBoardCell[][] cells = state.getCells();
 		for(int i = 0; i < cells.length; i++){
 			for(int j = 0; j < cells[i].length; j++){
-				if(cells[i][j].getCellState() == cellState)
-				for(DirectionWrapper neighbour : cells[i][j].getNeighbors()){
-					if(neighbour.getCell().getCellState() == BoardCellState.EMPTY){
-						potentialMobility++;
-						break;
+				if(cells[i][j].getCellState() == cellState){
+					for(DirectionWrapper neighbour : cells[i][j].getNeighbors()){
+						if(neighbour.getCell().getCellState() == BoardCellState.EMPTY){
+							potentialMobility++;
+							break;
+						}
 					}
+				}	
+			}
+		}
+
+		for(int i = 0; i < cells.length; i++){
+			for(int j = 0; j < cells[i].length; j++){
+				if(cells[i][j].getCellState() == cellState){
+					cellValue+=cellValues[i][j];
 				}
+				else if(cells[i][j].getCellState() == otherCellState){
+					cellValue-=cellValues[i][j];
+				}	
 			}
 		}
 		
-		value = mobility + potentialMobility;
+		value = cellValue - mobility + potentialMobility;
 
 		return value;
 	}
@@ -200,7 +220,7 @@ public class ExampleAgentA extends Agent{
 	private int minimaxAlphaBetaPrune(int depth, boolean agentTurn, int alpha, int beta, GameBoardState gameState, MoveWrapper move) {
 		if(gameState.isTerminal() || depth == MAX_DEPTH){
 			depthOfSearch = depth;
-			return heuristic(gameState, agentTurn);
+			return heuristic(gameState, move, agentTurn);
 		}
 
 		if(agentTurn){
@@ -247,6 +267,19 @@ public class ExampleAgentA extends Agent{
 			}
 			return best;
 		}
+	}
+
+	private void initCellValues(){
+		int[][] values = {  {100, -20, 10, 5, 5, 10, -20, 100},
+							{-20, -50, -2, -2, -2, -2, -50, -20},
+						  	{10, -2, -1, -1, -1, -1, -2, 10},
+						  	{5, -2, -1, -1, -1, -1, -2, 5},
+						  	{5, -2, -1, -1, -1, -1, -2, 5},
+						  	{10, -2, -1, -1, -1, -1, -2, 10},
+						  	{-20, -50, -2, -2, -2, -2, -50, -20},
+						  	{100, -20, 10, 5, 5, 10, -20, 100}
+						};
+		cellValues = values;
 	}
 	
 	/**

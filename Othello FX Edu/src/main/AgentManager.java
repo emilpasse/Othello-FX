@@ -55,6 +55,7 @@ public class AgentManager extends Application{
 		//new Othello(primaryStage, new ExampleAgentTwo("Agent A"), new ExampleAgentTwo("Agent B"));
 		//new Othello(primaryStage, new ExampleAgentOne("Agent A"));
 		new Othello(primaryStage, new ExampleAgentA("Minimax"));
+		//new Othello(primaryStage, new ExampleAgentA("Minimax"), new ExampleAgentTwo("Default"));
 		//new Othello(primaryStage, new ExampleAgentB());
 		//new Othello(primaryStage, new ExampleAgentC());
 		//new Othello(primaryStage, new ExampleAgentD());
