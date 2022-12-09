@@ -18,6 +18,7 @@ import com.eudycontreras.othello.models.GameBoardCell;
 import com.eudycontreras.othello.models.GameBoardState;
 import com.eudycontreras.othello.threading.ThreadManager;
 import com.eudycontreras.othello.threading.TimeSpan;
+import com.eudycontreras.othello.utilities.TraversalUtility;
 
 /**
  * <H2>Created by</h2> Eudy Contreras
@@ -34,7 +35,7 @@ public class ExampleAgentA extends Agent{
 	
 	static int MAX = 10000;
 	static int MIN = -10000;
-	static int MAX_DEPTH = 5;
+	int MAX_DEPTH = 5;
 	int nodesExamined = 0;
 	int depthOfSearch = 0;
 	PlayerTurn otherPlayerTurn;
@@ -59,6 +60,15 @@ public class ExampleAgentA extends Agent{
 		playerCell = BoardCellState.WHITE;
 		initCellValues();
 	}
+
+	public ExampleAgentA(String name, int depth) {
+		super(name, PlayerTurn.PLAYER_ONE);
+		otherPlayerTurn = PlayerTurn.PLAYER_TWO;
+		otherPlayerCell = BoardCellState.BLACK;
+		playerCell = BoardCellState.WHITE;
+		this.MAX_DEPTH = depth;
+		initCellValues();
+	}
 	
 	public ExampleAgentA(PlayerTurn playerTurn) {
 		super(playerTurn);
@@ -72,6 +82,22 @@ public class ExampleAgentA extends Agent{
 			otherPlayerCell = BoardCellState.WHITE;
 			playerCell = BoardCellState.BLACK;
 		}
+		initCellValues();	
+	}
+
+	public ExampleAgentA(PlayerTurn playerTurn, int depth) {
+		super(playerTurn);
+		if(playerTurn == PlayerTurn.PLAYER_ONE){
+			otherPlayerTurn = PlayerTurn.PLAYER_TWO;
+			otherPlayerCell = BoardCellState.BLACK;
+			playerCell = BoardCellState.WHITE;
+		}
+		else{
+			otherPlayerTurn = PlayerTurn.PLAYER_ONE;
+			otherPlayerCell = BoardCellState.WHITE;
+			playerCell = BoardCellState.BLACK;
+		}
+		this.MAX_DEPTH = depth;
 		initCellValues();	
 	}
 
@@ -137,12 +163,10 @@ public class ExampleAgentA extends Agent{
 		GameBoardCell[][] cells = state.getCells();
 		for(int i = 0; i < cells.length; i++){
 			for(int j = 0; j < cells[i].length; j++){
-				if(cells[i][j].getCellState() == cellState){
-					for(DirectionWrapper neighbour : cells[i][j].getNeighbors()){
-						if(neighbour.getCell().getCellState() == BoardCellState.EMPTY){
-							potentialMobility++;
-							break;
-						}
+				if(cells[i][j].getCellState() == BoardCellState.EMPTY){
+					for(DirectionWrapper neighbour : TraversalUtility.getNeighborCells(cells[i][j], otherCellState)){
+						potentialMobility+=1;
+						//break;
 					}
 				}	
 			}
